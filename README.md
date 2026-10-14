@@ -8,7 +8,7 @@ Sistema automatizado de monitoreo y cuantificación de dióxido de azufre (SO₂
 
 Sistema web que automatiza el flujo completo de estimación de emisiones de SO₂ volcánico:
 
-1. **Descarga de imágenes TROPOMI** desde Google Earth Engine (producto L3 NRTI, 1km de resolución)
+1. **Descarga de imágenes TROPOMI** desde Google Earth Engine (producto L3 NRTI, 15km de resolución)
 2. **Descarga de datos de viento** desde ERA5 (Copernicus CDS API, resolución 0.25°, horaria)
 3. **Cálculo de flujo SO₂** mediante el método SO2 (cross-section method), replicando la metodología MATLAB del Prof. Carballo
 4. **Visualización de resultados** en interfaz web con series temporales, tablas y previews de imágenes satelitales
@@ -160,35 +160,6 @@ El resultado final es el promedio de los flujos de todas las franjas válidas.
 **Selección de altura de viento:** Se selecciona el nivel de presión cuya dirección de viento mejor coincide con el azimut de la pluma detectada, entre 1500 m y 12000 m de altitud.
 
 ---
-
-## Estructura del proyecto
-
-```
-tesina_so2/
-├── api/
-│   ├── __init__.py
-│   └── main.py              # API REST (FastAPI)
-├── etl/
-│   ├── __init__.py
-│   ├── gee_tropomi_downloader.py  # Descarga TROPOMI desde GEE
-│   ├── geotiff_processor.py       # Procesamiento SO2
-│   └── era5_downloader.py         # Descarga viento ERA5
-├── database/
-│   ├── __init__.py
-│   └── models.py             # Modelos SQLAlchemy
-├── config/
-│   └── settings.py           # Configuración y constantes
-├── frontend/
-│   └── index.html            # Interfaz web
-├── data/
-│   ├── images/               # Imágenes GeoTIFF descargadas
-│   └── wind/                 # Datos de viento ERA5 (cache)
-├── docker-compose.yml
-├── Dockerfile.api
-├── nginx.conf
-├── requirements.txt
-└── README.md
-```
 
 ## Fuentes de datos
 
