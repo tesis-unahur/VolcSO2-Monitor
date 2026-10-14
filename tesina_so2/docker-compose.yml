@@ -46,7 +46,7 @@ services:
     volumes:
       - ./data:/app/data
       # Credenciales de Google Earth Engine
-      - C:/Users/julia/.config/earthengine:/root/.config/earthengine:ro
+      - ${HOME}/.config/earthengine:/root/.config/earthengine:ro
        # Credenciales de ERA5/Copernicus
       - ./.cdsapirc:/root/.cdsapirc:ro
     networks:
@@ -81,10 +81,11 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ./notebooks:/home/jovyan/notebooks
-      - ./data:/home/jovyan/data
+      - ./notebooks:${HOME}/notebooks
+      - ./data:${HOME}/data
       # Credenciales de Google Earth Engine
-      - C:/Users/julia/.config/earthengine:/root/.config/earthengine:ro
+      #- C:/Users/julia/.config/earthengine:/root/.config/earthengine:ro
+      - ${HOME}/.config/earthengine:/root/.config/earthengine:ro
     depends_on:
       postgres:
         condition: service_healthy

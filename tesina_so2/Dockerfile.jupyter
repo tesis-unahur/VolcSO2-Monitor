@@ -15,9 +15,9 @@ COPY requirements.txt /tmp/
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 # Copiar código del proyecto
-COPY --chown=${NB_UID}:${NB_GID} . /home/jovyan/work/
+COPY --chown=${NB_UID}:${NB_GID} . ${HOME}/work/
 
-WORKDIR /home/jovyan/notebooks
+WORKDIR ${HOME}/notebooks
 
 # Exponer puerto
 EXPOSE 8888
