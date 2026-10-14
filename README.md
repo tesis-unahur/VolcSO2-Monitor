@@ -189,5 +189,10 @@ El resultado final es el promedio de los flujos de todas las franjas válidas.
 
 Tesina de grado — Licenciatura en Informática, Universidad Nacional de Hurlingham (UNAHUR).
 
-**Autores:** Massey Florencia, Rodriguez Ayelen
+**Autores:** 
+
+Massey Florencia (Contacto: Florenciamssy@gmail.com) 
+
+Rodriguez Ayelen (Contacto: acrodri991@gmail.com)
+
 **Director:** Prof. Federico Carballo
