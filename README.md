@@ -2,11 +2,6 @@
 
 Sistema automatizado de monitoreo y cuantificación de dióxido de azufre (SO₂) volcánico mediante sensado remoto satelital.
 
-Tesina de grado — Licenciatura en Informática, Universidad Nacional de Hurlingham (UNAHUR).
-
-**Autores:** Massey Florencia, Rodriguez Ayelén
-**Director:** Prof. Federico Carballo
-
 ---
 
 ## Descripción
@@ -18,9 +13,6 @@ Sistema web que automatiza el flujo completo de estimación de emisiones de SO�
 3. **Cálculo de flujo SO₂** mediante el método SO2 (cross-section method), replicando la metodología MATLAB del Prof. Carballo
 4. **Visualización de resultados** en interfaz web con series temporales, tablas y previews de imágenes satelitales
 
-## Caso de estudio
-
-Volcán **Sabancaya** (Perú, -15.78°, -71.85°, 5976 m), julio 2019. Validado contra resultados de referencia del Prof. Carballo.
 
 ---
 
@@ -68,8 +60,7 @@ Volcán **Sabancaya** (Perú, -15.78°, -71.85°, 5976 m), julio 2019. Validado 
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <url-del-repositorio>
-cd tesina_so2
+git clone https://github.com/tesis-unahur/VolcSO2-Monitor.git
 ```
 
 ### 2. Configurar credenciales
@@ -225,4 +216,7 @@ tesina_so2/
 
 ## 📄 Licencia
 
-Este proyecto fue desarrollado como trabajo de tesina para la carrera de Licenciatura en Informática.
+Tesina de grado — Licenciatura en Informática, Universidad Nacional de Hurlingham (UNAHUR).
+
+**Autores:** Massey Florencia, Rodriguez Ayelen
+**Director:** Prof. Federico Carballo
