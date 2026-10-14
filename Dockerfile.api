@@ -24,5 +24,8 @@ RUN mkdir -p /app/data/images /app/data/wind /app/data/results
 # Exponer puerto
 EXPOSE 8000
 
+#Cargar credenciales
+ENTRYPOINT ["/entrypoint.sh"]
+
 # Comando de inicio
 CMD ["python", "-m", "api.main"]
