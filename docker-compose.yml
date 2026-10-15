@@ -1,5 +1,4 @@
-version: '3.8'
-
+name: VolcSO2-Monitor
 services:
   # Base de datos PostgreSQL
   postgres:
@@ -26,6 +25,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.api
+    env_file:
+    - .env
     container_name: so2_api
     environment:
       - DB_HOST=postgres
@@ -47,8 +48,6 @@ services:
       - ./data:/app/data
       # Credenciales de Google Earth Engine
       - ${HOME}/.config/earthengine:/root/.config/earthengine:ro
-       # Credenciales de ERA5/Copernicus
-      - ./.cdsapirc:/root/.cdsapirc:ro
     networks:
       - so2_network
 

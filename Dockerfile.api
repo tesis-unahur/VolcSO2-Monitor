@@ -25,6 +25,8 @@ RUN mkdir -p /app/data/images /app/data/wind /app/data/results
 EXPOSE 8000
 
 #Cargar credenciales
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
 # Comando de inicio

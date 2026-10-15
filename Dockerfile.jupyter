@@ -12,7 +12,9 @@ USER ${NB_UID}
 
 # Copiar requirements e instalar
 COPY requirements.txt /tmp/
-RUN pip install --no-cache-dir -r /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt \
+      "numba>=0.61" "scikit-learn>=1.5" \
+ && pip check
 
 # Copiar código del proyecto
 COPY --chown=${NB_UID}:${NB_GID} . ${HOME}/work/
