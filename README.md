@@ -324,6 +324,16 @@ Detalle completo en la memoria de la tesina (Capítulo IV, sección 4.5).
 
 ---
 
+## Cómo citar
+
+**Tesina (formato APA 7):**
+
+Massey, F., & Rodriguez, A. (2026). *VolcSO₂-Monitor: sistema para la estimación del flujo de SO₂ volcánico a partir de datos TROPOMI/Sentinel-5P y ERA5* [Tesina de grado, Universidad Nacional de Hurlingham]. https://github.com/tesis-unahur/VolcSO2-Monitor
+
+**Software:** véase el archivo `CITATION.cff`.
+
+---
+
 ## Autoría
 
 Tesina de grado, Licenciatura en Informática, Universidad Nacional de Hurlingham (UNAHUR).
@@ -331,3 +341,4 @@ Tesina de grado, Licenciatura en Informática, Universidad Nacional de Hurlingha
 **Autoras:** Florencia Massey, Ayelen Rodriguez
 
 **Director:** Prof. Federico Carballo
+

@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "Si utiliza este software o la tesina asociada, cítelos como se indica a continuación."
+title: "VolcSO₂-Monitor: sistema para la estimación del flujo de SO₂ volcánico a partir de datos TROPOMI/Sentinel-5P y ERA5"
+type: software
+authors:
+  - family-names: "Massey"
+    given-names: "Florencia"
+  - family-names: "Rodriguez"
+    given-names: "Ayelen"
+repository-code: "https://github.com/tesis-unahur/VolcSO2-Monitor"
+date-released: "2026-10-01"
+version: "1.0.0"
+license: "COMPLETAR"
+keywords:
+  - SO2
+  - volcán
+  - TROPOMI
+  - Sentinel-5P
+  - ERA5
+abstract: "Sistema informático que integra imágenes TROPOMI/Sentinel-5P y viento ERA5 para estimar el flujo de SO₂ volcánico mediante el método de corte transversal de pluma."
