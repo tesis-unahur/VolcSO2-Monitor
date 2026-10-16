@@ -1174,8 +1174,9 @@ def verificar_estado_gee():
     Verifica si Google Earth Engine está configurado y funcionando.
     """
     try:
+        import os      
         import ee
-        ee.Initialize(project='turing-terminus-398901')
+        ee.Initialize(project=os.environ.get('GEE_PROJECT') or None)
         
         # Test simple: verificar que podemos acceder a la colección
         collection = ee.ImageCollection('COPERNICUS/S5P/NRTI/L3_SO2')

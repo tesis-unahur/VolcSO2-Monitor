@@ -43,7 +43,7 @@ class GEETROPOMIDownloader:
     BAND_VCD = 'SO2_column_number_density_15km'
     SCALE = 1000
     CRS = 'EPSG:4326'
-    GEE_PROJECT = 'turing-terminus-398901'
+    GEE_PROJECT = os.environ.get('GEE_PROJECT') or None
     
     def __init__(self):
         self.initialized = False
