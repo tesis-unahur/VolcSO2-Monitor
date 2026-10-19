@@ -360,6 +360,10 @@ class GEETROPOMIDownloader:
         # Descargar
         archivos = []
         for img_info in imagenes:
+            # Cancelación pedida desde la API: se corta antes de la próxima imagen
+            if progreso is not None and progreso.get('cancelar'):
+                logger.info("Descarga cancelada por el usuario")
+                break
             try:
                 archivo = self.descargar_imagen(
                     lat=lat,

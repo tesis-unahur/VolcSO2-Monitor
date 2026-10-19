@@ -73,6 +73,10 @@ class ImagenTROPOMI(Base):
     # Estado
     descargado = Column(Boolean, default=False)
     procesado = Column(Boolean, default=False)
+    # Resultado del control de calidad: True si la imagen se procesó pero
+    # quedó descartada (sin flujo calculado); motivo_descarte explica por qué.
+    descartada = Column(Boolean, default=False)
+    motivo_descarte = Column(String(255))
     fecha_descarga = Column(DateTime)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
     
@@ -198,10 +202,31 @@ def get_session():
     return Session()
 
 
+def _migrar_columnas(engine):
+    """Agrega columnas nuevas a bases ya creadas (create_all no altera tablas)."""
+    from sqlalchemy import text
+    with engine.begin() as conn:
+        conn.execute(text(
+            "ALTER TABLE imagenes_tropomi "
+            "ADD COLUMN IF NOT EXISTS descartada BOOLEAN DEFAULT FALSE"))
+        conn.execute(text(
+            "ALTER TABLE imagenes_tropomi "
+            "ADD COLUMN IF NOT EXISTS motivo_descarte VARCHAR(255)"))
+        # Imágenes procesadas antes de este cambio que no generaron resultado
+        # fueron descartadas (el motivo exacto no se había guardado).
+        conn.execute(text(
+            "UPDATE imagenes_tropomi SET descartada = TRUE, "
+            "motivo_descarte = 'Descartada (motivo no registrado)' "
+            "WHERE procesado = TRUE AND COALESCE(descartada, FALSE) = FALSE "
+            "AND motivo_descarte IS NULL "
+            "AND id NOT IN (SELECT imagen_id FROM resultados_flujo_so2)"))
+
+
 def init_database():
     """Inicializa la base de datos creando todas las tablas"""
     engine = get_engine()
     Base.metadata.create_all(engine)
+    _migrar_columnas(engine)
     print("Base de datos inicializada correctamente")
     return engine
 

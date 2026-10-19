@@ -227,6 +227,8 @@ def listar_imagenes(
             "fecha_adquisicion": img.fecha_adquisicion,
             "descargado": img.descargado,
             "procesado": img.procesado,
+            "descartada": bool(img.descartada),
+            "motivo_descarte": img.motivo_descarte,
             "ruta_archivo": img.ruta_archivo
         }
         for img in imagenes
@@ -815,6 +817,26 @@ def descargar_desde_gee(
     if not volcan:
         raise HTTPException(status_code=404, detail="Volcán no encontrado")
 
+    # Validación de fechas (evita descargas enormes por un error de tipeo)
+    f_ini = request.fecha_inicio.replace(tzinfo=None)
+    f_fin = request.fecha_fin.replace(tzinfo=None)
+    if f_fin < f_ini:
+        raise HTTPException(status_code=400,
+                            detail="La fecha final no puede ser anterior a la inicial")
+    if f_ini.date() > datetime.utcnow().date():
+        raise HTTPException(status_code=400,
+                            detail="La fecha inicial no puede ser futura")
+    if f_ini.year < 2018:
+        raise HTTPException(status_code=400,
+                            detail="TROPOMI tiene datos recién desde 2018")
+    if (f_fin - f_ini).days > 366:
+        raise HTTPException(status_code=400,
+                            detail="El rango máximo por descarga es de 366 días")
+    if _progreso_descarga['estado'] == 'procesando':
+        raise HTTPException(status_code=409,
+                            detail="Ya hay una descarga en curso; cancélela o espere a que termine")
+
+    _progreso_descarga['cancelar'] = False
     _progreso_descarga['estado'] = 'procesando'
     _progreso_descarga['total'] = 0
     _progreso_descarga['descargadas'] = 0
@@ -849,6 +871,7 @@ _progreso_descarga = {
     'volcan': None,
     'mensaje': None,
     'exito': None,
+    'cancelar': False,
 }
 
 
@@ -874,18 +897,42 @@ def _descargar_gee_background(
         )
         _progreso_descarga['exito'] = resultado.get('exito')
         _progreso_descarga['mensaje'] = resultado.get('mensaje')
+        if _progreso_descarga.get('cancelar'):
+            _progreso_descarga['mensaje'] = (
+                f"Descarga cancelada ({_progreso_descarga['descargadas']} "
+                f"de {_progreso_descarga['total']} imágenes)")
     except Exception as e:
         logger.error(f"Error descargando desde GEE: {e}")
         _progreso_descarga['exito'] = False
         _progreso_descarga['mensaje'] = str(e)
     finally:
-        _progreso_descarga['estado'] = 'completado'
+        _progreso_descarga['estado'] = (
+            'cancelado' if _progreso_descarga.get('cancelar') else 'completado')
+
+
+@app.post("/api/gee/cancelar-descarga", tags=["Google Earth Engine"])
+def cancelar_descarga_gee():
+    """Pide cortar la descarga en curso. Termina la imagen actual y se detiene;
+    las ya descargadas se conservan."""
+    if _progreso_descarga['estado'] != 'procesando':
+        return {"mensaje": "No hay descarga en curso"}
+    _progreso_descarga['cancelar'] = True
+    return {"mensaje": "Cancelando: se detendrá al terminar la imagen actual"}
 
 
 @app.get("/api/gee/progreso-descarga", tags=["Google Earth Engine"])
 def progreso_descarga_gee():
     """Consulta el progreso de la descarga GEE en curso."""
     return _progreso_descarga
+
+
+def _marcar_descartada(session, imagen, motivo: str):
+    """Marca la imagen como procesada pero descartada, guardando el motivo."""
+    imagen.procesado = True
+    imagen.descartada = True
+    imagen.motivo_descarte = motivo[:255]
+    imagen.fecha_procesamiento = datetime.utcnow()
+    session.commit()
 
 
 @app.post("/api/gee/procesar/{imagen_id}", tags=["Google Earth Engine"])
@@ -924,16 +971,16 @@ def procesar_geotiff(
         # no se calcula flujo (mismo criterio que el MATLAB de referencia)
         if not getattr(processor, 'calidad_ok', True):
             processor.cerrar()
-            imagen.procesado = True
-            imagen.fecha_procesamiento = datetime.utcnow()
-            session.commit()
+            motivo = (
+                f"Cobertura insuficiente: {processor.porcentaje_sin_dato:.1f}% "
+                f"de píxeles sin dato (máx. {SO2FC_MAX_PORCENTAJE_SIN_DATO}%)"
+            )
+            _marcar_descartada(session, imagen, motivo)
             return {
                 "mensaje": "Imagen descartada por cobertura insuficiente",
                 "imagen_id": imagen_id,
-                "error": (
-                    f"{processor.porcentaje_sin_dato:.1f}% de píxeles sin dato "
-                    f"(máximo admitido: {SO2FC_MAX_PORCENTAJE_SIN_DATO}%)"
-                ),
+                "descartada": True,
+                "error": motivo,
                 "franjas": []
             }
         
@@ -971,13 +1018,13 @@ def procesar_geotiff(
             # Ningun nivel de la ventana coincide con el azimut de la pluma:
             # no hay forma confiable de asignar un viento de transporte
             processor.cerrar()
-            imagen.procesado = True
-            imagen.fecha_procesamiento = datetime.utcnow()
-            session.commit()
+            motivo = "Sin viento compatible con la pluma (ningún nivel coincide con el azimut)"
+            _marcar_descartada(session, imagen, motivo)
             return {
                 "mensaje": "Imagen descartada: sin viento compatible con la pluma",
                 "imagen_id": imagen_id,
-                "error": "Ningun nivel de viento coincide con el azimut detectado",
+                "descartada": True,
+                "error": motivo,
                 "franjas": []
             }
 
@@ -1004,12 +1051,12 @@ def procesar_geotiff(
         
         if not resultado_calculo.get('exito'):
             # Marcar como procesada aunque no haya resultado válido
-            imagen.procesado = True
-            imagen.fecha_procesamiento = datetime.utcnow()
-            session.commit()
+            motivo = resultado_calculo.get('mensaje') or "Sin franjas válidas (pluma no detectada o SO₂ insuficiente)"
+            _marcar_descartada(session, imagen, f"Sin flujo válido: {motivo}")
             return {
                 "mensaje": "No se pudo calcular flujo",
                 "imagen_id": imagen_id,
+                "descartada": True,
                 "error": resultado_calculo.get('mensaje'),
                 "franjas": resultado_calculo.get('franjas', [])
             }
@@ -1040,10 +1087,12 @@ def procesar_geotiff(
         
         session.add(resultado_db)
         
-        # Marcar imagen como procesada
+        # Marcar imagen como procesada (no descartada)
         imagen.procesado = True
+        imagen.descartada = False
+        imagen.motivo_descarte = None
         imagen.fecha_procesamiento = datetime.utcnow()
-        
+
         session.commit()
         
         return {
@@ -1108,6 +1157,7 @@ def procesar_lote_geotiff(
     _progreso_lote['total'] = len(imagen_ids)
     _progreso_lote['procesadas'] = 0
     _progreso_lote['exitos'] = 0
+    _progreso_lote['descartadas'] = 0
     _progreso_lote['errores'] = 0
     _progreso_lote['detalle'] = []
     
@@ -1127,6 +1177,7 @@ _progreso_lote = {
     'total': 0,
     'procesadas': 0,
     'exitos': 0,
+    'descartadas': 0,
     'errores': 0,
     'detalle': []
 }
@@ -1140,12 +1191,21 @@ def _procesar_lote_background(imagen_ids: List[int]):
         bg_session = get_bg_session()
         try:
             resultado = procesar_geotiff(img_id, session=bg_session)
-            _progreso_lote['exitos'] += 1
-            _progreso_lote['detalle'].append({
-                "imagen_id": img_id,
-                "exito": True,
-                "flujo_ton_dia": resultado.get('resultado', {}).get('flujo_ton_dia')
-            })
+            if resultado.get('descartada'):
+                _progreso_lote['descartadas'] += 1
+                _progreso_lote['detalle'].append({
+                    "imagen_id": img_id,
+                    "exito": False,
+                    "descartada": True,
+                    "motivo": resultado.get('error')
+                })
+            else:
+                _progreso_lote['exitos'] += 1
+                _progreso_lote['detalle'].append({
+                    "imagen_id": img_id,
+                    "exito": True,
+                    "flujo_ton_dia": resultado.get('resultado', {}).get('flujo_ton_dia')
+                })
         except Exception as e:
             _progreso_lote['errores'] += 1
             _progreso_lote['detalle'].append({
@@ -1159,7 +1219,8 @@ def _procesar_lote_background(imagen_ids: List[int]):
             _progreso_lote['procesadas'] += 1
     
     _progreso_lote['estado'] = 'completado'
-    logger.info(f"Lote completado: {_progreso_lote['exitos']} éxitos, {_progreso_lote['errores']} errores")
+    logger.info(f"Lote completado: {_progreso_lote['exitos']} con resultado, "
+                f"{_progreso_lote['descartadas']} descartadas, {_progreso_lote['errores']} errores")
 
 
 @app.get("/api/gee/progreso-lote", tags=["Google Earth Engine"])
