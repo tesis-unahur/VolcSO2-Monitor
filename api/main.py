@@ -1005,15 +1005,21 @@ def procesar_geotiff(
         
         # 4. Obtener datos de viento PASANDO el azimut de pluma
         #    Así buscar_altura_por_azimut selecciona la altura correcta
-        viento = obtener_viento_para_imagen(
-            volcan_id=volcan.id,
-            lat=volcan.latitud,
-            lon=volcan.longitud,
-            fecha=fecha,
-            altitud_m=volcan.altitud_m or 5000,
-            azimut_pluma=azimut_pluma
-        )
-        
+        try:
+            viento = obtener_viento_para_imagen(
+                volcan_id=volcan.id,
+                lat=volcan.latitud,
+                lon=volcan.longitud,
+                fecha=fecha,
+                altitud_m=volcan.altitud_m or 5000,
+                azimut_pluma=azimut_pluma
+            )
+        except RuntimeError as e:
+            # Falla de ERA5: la imagen NO se marca como procesada ni descartada,
+            # queda pendiente para reintentar cuando el viento esté disponible.
+            processor.cerrar()
+            raise HTTPException(status_code=502, detail=str(e))
+
         if not viento:
             # Ningun nivel de la ventana coincide con el azimut de la pluma:
             # no hay forma confiable de asignar un viento de transporte

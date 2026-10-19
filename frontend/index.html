@@ -549,10 +549,10 @@
                 const estado = i.procesado ? '<span class="badge bg-secondary">Procesada</span>' : i.descargado ? '<span class="badge bg-warning text-dark">Pendiente</span>' : '<span class="badge bg-secondary">-</span>';
                 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
                 const calidad = !i.procesado ? '<span class="text-muted">-</span>'
-                    : i.descartada ? `<span class="badge bg-danger">Descartada</span> <small class="text-muted">${esc(i.motivo_descarte || '')}</small>`
+                    : i.descartada ? `<span class="badge bg-danger" title="${esc(i.motivo_descarte || 'Motivo no registrado')}" style="cursor:help">Descartada</span>`
                     : '<span class="badge bg-success">Válida</span>';
                 const checked = checkedIds.has(String(i.id)) ? ' checked' : '';
-                return `<tr><td><input type="checkbox" class="img-check" value="${i.id}"${checked}></td><td>${idx + 1}</td><td>${new Date(i.fecha_adquisicion).toLocaleDateString('es-AR')}</td><td>${v?.nombre||'-'}</td><td>${estado}</td><td>${calidad}</td><td>${i.descargado && !i.procesado ? `<button class="btn btn-sm btn-primary" onclick="procesarImagen(${i.id})"><i class="bi bi-gear"></i></button>`:''}<button class="btn btn-sm btn-outline-danger ms-1" onclick="borrarImagen(${i.id})"><i class="bi bi-trash"></i></button></td></tr>`;
+                return `<tr><td><input type="checkbox" class="img-check" value="${i.id}"${checked}></td><td>${idx + 1}</td><td>${new Date(i.fecha_adquisicion).toLocaleDateString('es-AR')}</td><td>${v?.nombre||'-'}</td><td>${estado}</td><td>${calidad}</td><td>${i.descargado ? `<a class="btn btn-sm btn-outline-secondary me-1" href="${API}/imagenes/${i.id}/preview" target="_blank" title="Ver imagen de SO₂"><i class="bi bi-eye"></i></a>`:''}${i.descargado && !i.procesado ? `<button class="btn btn-sm btn-primary" onclick="procesarImagen(${i.id})" title="Procesar esta imagen"><i class="bi bi-gear"></i></button>`:''}<button class="btn btn-sm btn-outline-danger ms-1" onclick="borrarImagen(${i.id})"><i class="bi bi-trash"></i></button></td></tr>`;
             }).join('');
         }
 
@@ -675,7 +675,12 @@
         async function borrarImagenesSeleccionadas() {
             const checks = [...document.querySelectorAll('.img-check:checked')];
             if(!checks.length) return; if(!confirm(`¿Borrar ${checks.length} imágenes?`)) return;
-            for(const c of checks) { await fetch(`${API}/imagenes/${c.value}`, {method:'DELETE'}); }
+            let borradas = 0;
+            for(const c of checks) {
+                try { const r = await fetch(`${API}/imagenes/${c.value}`, {method:'DELETE'}); if(r.ok) borradas++; } catch(e) {}
+            }
+            document.getElementById('checkAllImg').checked = false;
+            showToast(`${borradas} de ${checks.length} imágenes borradas`, borradas === checks.length ? 'success' : 'warning');
             loadImagenes();
         }
 

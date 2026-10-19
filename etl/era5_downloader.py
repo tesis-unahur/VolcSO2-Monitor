@@ -256,8 +256,10 @@ def obtener_viento_para_imagen(
     
     datos = downloader.descargar_viento_era5(lat=lat, lon=lon, fecha=fecha, altura_volcan=altitud_m)
     if not datos:
-        return None
-    
+        # Falla de descarga/lectura de ERA5 (credenciales, red, licencia):
+        # distinto de "ningún nivel coincide con la pluma", que sí devuelve None.
+        raise RuntimeError("No se pudo obtener el viento ERA5 (ver logs de la API)")
+
     if azimut_pluma is not None:
         viento_seleccionado = downloader.buscar_altura_por_azimut(datos, azimut_pluma)
     else:
