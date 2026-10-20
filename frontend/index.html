@@ -552,7 +552,7 @@
                     : i.descartada ? `<span class="badge bg-danger" title="${esc(i.motivo_descarte || 'Motivo no registrado')}" style="cursor:help">Descartada</span>`
                     : '<span class="badge bg-success">Válida</span>';
                 const checked = checkedIds.has(String(i.id)) ? ' checked' : '';
-                return `<tr><td><input type="checkbox" class="img-check" value="${i.id}"${checked}></td><td>${idx + 1}</td><td>${new Date(i.fecha_adquisicion).toLocaleDateString('es-AR')}</td><td>${v?.nombre||'-'}</td><td>${estado}</td><td>${calidad}</td><td>${i.descargado ? `<a class="btn btn-sm btn-outline-secondary me-1" href="${API}/imagenes/${i.id}/preview" target="_blank" title="Ver imagen de SO₂"><i class="bi bi-eye"></i></a>`:''}${i.descargado && !i.procesado ? `<button class="btn btn-sm btn-primary" onclick="procesarImagen(${i.id})" title="Procesar esta imagen"><i class="bi bi-gear"></i></button>`:''}<button class="btn btn-sm btn-outline-danger ms-1" onclick="borrarImagen(${i.id})"><i class="bi bi-trash"></i></button></td></tr>`;
+                return `<tr><td><input type="checkbox" class="img-check" value="${i.id}"${checked}></td><td>${idx + 1}</td><td>${new Date(i.fecha_adquisicion).toLocaleDateString('es-AR')}</td><td>${v?.nombre||'-'}</td><td>${estado}</td><td>${calidad}</td><td>${i.descargado ? `<a class="btn btn-sm btn-outline-secondary me-1" href="${API}/imagenes/${i.id}/preview" target="_blank" title="Ver imagen de SO₂"><i class="bi bi-eye"></i></a>`:''}<button class="btn btn-sm btn-outline-danger ms-1" onclick="borrarImagen(${i.id})"><i class="bi bi-trash"></i></button></td></tr>`;
             }).join('');
         }
 
