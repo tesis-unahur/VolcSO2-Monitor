@@ -1,14 +1,12 @@
 """
-Módulo ETL para descarga de datos de viento desde ERA5 (CDS API)
-Reemplaza NCEP Reanalysis para mayor precisión.
+Módulo ETL para descarga de datos de viento desde ERA5 (CDS API).
 
-ERA5 ventajas sobre NCEP:
-- Resolución espacial: 0.25° (vs 2.5° de NCEP)
-- Resolución temporal: horaria (vs 6 horas de NCEP)
-- Más preciso para comparar con resultados GDAS del profesor
+ERA5 (ECMWF): resolución espacial de 0,25° y resolución temporal horaria.
+Se pide un archivo NetCDF por fecha y hora de sobrepaso, y se guarda en caché
+local (data/) para no repetir descargas.
 
-Mantiene la misma interfaz que el downloader anterior para compatibilidad.
-Basado en el método SO2FC del código MATLAB (AnalisisS02_CD_v4.m)
+El nivel de viento se selecciona según el método SO2FC (Carbajal et al.),
+a partir del azimut de la pluma detectado en la imagen.
 """
 import numpy as np
 import xarray as xr

@@ -276,10 +276,6 @@
                             <div class="card-body">
                                 <select class="form-select mb-3" id="volcanPredef">
                                     <option value="">-- Predefinidos --</option>
-                                    <option value="sabancaya">Sabancaya (Perú)</option>
-                                    <option value="copahue">Copahue (Argentina)</option>
-                                    <option value="etna">Etna (Italia)</option>
-                                    <option value="villarrica">Villarrica (Chile)</option>
                                 </select>
                                 <form id="formVolcan">
                                     <input type="text" class="form-control mb-2" id="nombreVolcan" placeholder="Nombre" required>
@@ -317,13 +313,6 @@
         let map, chartDashboard, chartResultados, toastEl;
         let volcanes = [], imagenes = [], resultados = [];
         let markers = {};
-
-        const PREDEFINIDOS = {
-            sabancaya: {nombre:'Sabancaya', pais:'Perú', lat:-15.78, lon:-71.85, alt:5976},
-            copahue: {nombre:'Copahue', pais:'Argentina', lat:-37.85, lon:-71.17, alt:2997},
-            etna: {nombre:'Etna', pais:'Italia', lat:37.751, lon:14.993, alt:3357},
-            villarrica: {nombre:'Villarrica', pais:'Chile', lat:-39.42, lon:-71.93, alt:2847}
-        };
 
         document.addEventListener('DOMContentLoaded', () => {
             initToast(); initMap(); initCharts(); loadAll(); setupEvents(); setDefaultDates(); checkGeeStatus(); retomarDescargaEnCurso();
@@ -374,7 +363,16 @@
         }
 
         async function cargarPredefinidos() {
-            try { predefinidosApi = await (await fetch(`${API}/volcanes/predefinidos`)).json(); } catch(e) { predefinidosApi = {}; }
+            try {
+                const res = await fetch(`${API}/volcanes/predefinidos`);
+                const data = res.ok ? await res.json() : {};
+                // Solo entradas válidas (con nombre y coordenadas)
+                predefinidosApi = Object.fromEntries(Object.entries(data)
+                    .filter(([, p]) => p && p.nombre && typeof p.lat === 'number' && typeof p.lon === 'number'));
+            } catch(e) { predefinidosApi = {}; }
+            const sel = document.getElementById('volcanPredef');
+            sel.innerHTML = '<option value="">-- Predefinidos --</option>' + Object.entries(predefinidosApi)
+                .map(([clave, p]) => `<option value="${clave}">${p.nombre} (${p.pais || ''})</option>`).join('');
             dibujarPredefinidos();
         }
 
@@ -435,8 +433,8 @@
             document.getElementById('btnBorrarResultados').onclick = borrarResultados;
             document.getElementById('checkAllImg').onchange = e => document.querySelectorAll('.img-check').forEach(c=>c.checked=e.target.checked);
             document.getElementById('volcanPredef').onchange = e => {
-                const v = PREDEFINIDOS[e.target.value];
-                if(v) { document.getElementById('nombreVolcan').value=v.nombre; document.getElementById('paisVolcan').value=v.pais; document.getElementById('latVolcan').value=v.lat; document.getElementById('lonVolcan').value=v.lon; document.getElementById('altVolcan').value=v.alt; }
+                const v = predefinidosApi[e.target.value];
+                if(v) { document.getElementById('nombreVolcan').value=v.nombre; document.getElementById('paisVolcan').value=v.pais; document.getElementById('latVolcan').value=v.lat; document.getElementById('lonVolcan').value=v.lon; document.getElementById('altVolcan').value=v.altitud_m ?? ''; }
             };
             document.getElementById('volcanDashboard').onchange = e => {
                 if(!e.target.value) return;

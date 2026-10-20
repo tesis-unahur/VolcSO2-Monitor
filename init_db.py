@@ -40,7 +40,8 @@ def main():
             nombre=datos['nombre'],
             latitud=datos['lat'],
             longitud=datos['lon'],
-            pais=datos.get('pais')
+            pais=datos.get('pais'),
+            altitud_m=datos.get('altitud_m')
         )
         session.add(volcan)
         volcanes_agregados += 1

@@ -41,14 +41,28 @@ DATABASE_CONFIG = {
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", 8000))
 
-# Configuración de volcanes predefinidos (lat, lon, nombre)
+# Volcanes predefinidos: coordenadas del cráter y altitud (m s.n.m.).
+# La altitud define la ventana de búsqueda del viento (cráter a +2.000 m),
+# por lo que debe estar cargada para que el cálculo sea correcto.
+# Valores de referencia: Global Volcanism Program (Smithsonian) y Wikipedia;
+# verificar con la fuente oficial antes de usarlos en un estudio.
 VOLCANES_PREDEFINIDOS = {
-    "etna": {"lat": 37.751, "lon": 14.993, "nombre": "Monte Etna", "pais": "Italia"},
-    "villarrica": {"lat": -39.42, "lon": -71.93, "nombre": "Villarrica", "pais": "Chile"},
-    "copahue": {"lat": -37.85, "lon": -71.17, "nombre": "Copahue", "pais": "Argentina/Chile"},
-    "stromboli": {"lat": 38.789, "lon": 15.213, "nombre": "Stromboli", "pais": "Italia"},
-    "kilauea": {"lat": 19.421, "lon": -155.287, "nombre": "Kilauea", "pais": "USA"},
-    "popocatepetl": {"lat": 19.023, "lon": -98.622, "nombre": "Popocatépetl", "pais": "México"},
+    # Argentina y frontera con Chile
+    "peteroa": {"lat": -35.242, "lon": -70.574, "altitud_m": 3977, "nombre": "Peteroa", "pais": "Argentina/Chile"},
+    "copahue": {"lat": -37.85, "lon": -71.167, "altitud_m": 2997, "nombre": "Copahue", "pais": "Argentina/Chile"},
+    "lastarria": {"lat": -25.167, "lon": -68.517, "altitud_m": 5697, "nombre": "Lastarria", "pais": "Argentina/Chile"},
+    "socompa": {"lat": -24.396, "lon": -68.246, "altitud_m": 6051, "nombre": "Socompa", "pais": "Argentina/Chile"},
+    "llullaillaco": {"lat": -24.720, "lon": -68.537, "altitud_m": 6723, "nombre": "Llullaillaco", "pais": "Argentina/Chile"},
+    "ojos_del_salado": {"lat": -27.110, "lon": -68.541, "altitud_m": 6893, "nombre": "Ojos del Salado", "pais": "Argentina/Chile"},
+    # Otros volcanes de la región andina
+    "sabancaya": {"lat": -15.78, "lon": -71.85, "altitud_m": 5976, "nombre": "Sabancaya", "pais": "Perú"},
+    "lascar": {"lat": -23.367, "lon": -67.733, "altitud_m": 5592, "nombre": "Láscar", "pais": "Chile"},
+    "villarrica": {"lat": -39.42, "lon": -71.93, "altitud_m": 2847, "nombre": "Villarrica", "pais": "Chile"},
+    # Referencias internacionales de gran emisión
+    "etna": {"lat": 37.751, "lon": 14.993, "altitud_m": 3357, "nombre": "Etna", "pais": "Italia"},
+    "stromboli": {"lat": 38.789, "lon": 15.213, "altitud_m": 924, "nombre": "Stromboli", "pais": "Italia"},
+    "kilauea": {"lat": 19.421, "lon": -155.287, "altitud_m": 1222, "nombre": "Kilauea", "pais": "USA"},
+    "popocatepetl": {"lat": 19.023, "lon": -98.622, "altitud_m": 5393, "nombre": "Popocatépetl", "pais": "México"},
 }
 
 # Parámetros de procesamiento
@@ -121,6 +135,3 @@ PRESSURE_TO_HEIGHT = {
     250: 10366,
     200: 11787
 }
-
-# URL NCEP Reanalysis (para vientos, sin autenticación)
-NCEP_BASE_URL = "https://psl.noaa.gov/thredds/dodsC/Datasets/ncep.reanalysis"

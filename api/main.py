@@ -137,6 +137,14 @@ def listar_volcanes(
     return volcanes
 
 
+# Debe declararse ANTES de /api/volcanes/{volcan_id}: si no, FastAPI interpreta
+# "predefinidos" como un volcan_id y responde 422.
+@app.get("/api/volcanes/predefinidos", tags=["Volcanes"])
+def obtener_volcanes_predefinidos():
+    """Retorna la lista de volcanes predefinidos disponibles"""
+    return VOLCANES_PREDEFINIDOS
+
+
 @app.get("/api/volcanes/{volcan_id}", response_model=VolcanResponse, tags=["Volcanes"])
 def obtener_volcan(volcan_id: int, session = Depends(get_db)):
     """Obtiene información de un volcán específico"""
@@ -163,12 +171,6 @@ def crear_volcan(volcan: VolcanCreate, session = Depends(get_db)):
     return nuevo_volcan
 
 
-@app.get("/api/volcanes/predefinidos", tags=["Volcanes"])
-def obtener_volcanes_predefinidos():
-    """Retorna la lista de volcanes predefinidos disponibles"""
-    return VOLCANES_PREDEFINIDOS
-
-
 @app.post("/api/volcanes/predefinidos/{clave}", response_model=VolcanResponse, tags=["Volcanes"])
 def agregar_volcan_predefinido(clave: str, session = Depends(get_db)):
     """Agrega un volcán de la lista predefinida a la base de datos"""
@@ -179,13 +181,19 @@ def agregar_volcan_predefinido(clave: str, session = Depends(get_db)):
     
     existente = session.query(Volcan).filter_by(nombre=datos['nombre']).first()
     if existente:
+        # Volcán cargado antes sin altitud: completarla (la usa el cálculo del viento)
+        if existente.altitud_m is None and datos.get('altitud_m'):
+            existente.altitud_m = datos['altitud_m']
+            session.commit()
+            session.refresh(existente)
         return existente
-    
+
     nuevo_volcan = Volcan(
         nombre=datos['nombre'],
         latitud=datos['lat'],
         longitud=datos['lon'],
-        pais=datos.get('pais')
+        pais=datos.get('pais'),
+        altitud_m=datos.get('altitud_m')
     )
     session.add(nuevo_volcan)
     session.commit()
